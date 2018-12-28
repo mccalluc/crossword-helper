@@ -5,5 +5,4 @@ cache: pip
 install:
   - pip install -r requirements.txt
 script:
-  - flake8
-  - python -m doctest *.py
+  - ./test.sh
