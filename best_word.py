@@ -8,19 +8,19 @@ def best_word(sequence, words, on_top=True):
     or below the sequence,
     returns the word and an offset which produces the best bigrams.
     
-    >>> best_word('c', ['cat', 'hat'])
-    ('cat', -1)
+    >>> words = {'boy', 'aka', 'abba', 'book', 'year', 'tab'}
+    >>> best_word('oboe', words)
+    ('abba', 2)
+    
+    >>> best_word('oboe', words, on_top=False)
+    ('book', 1)
     '''
     all_bigrams = bigrams(words)
-    print(all_bigrams)
     best_score = 0
     best_word = None
     best_offset = None
     for word in words:
-        print('word:',word)
-        print('sequence:',sequence)
         for offset, overlap in offset_overlaps(sequence, word):
-            print('offset:',offset,overlap)
             pair_bigrams = (
                 alignment_bigrams(overlap, sequence)
                 if on_top else
@@ -28,6 +28,7 @@ def best_word(sequence, words, on_top=True):
             )
             this_score = score(pair_bigrams, all_bigrams)
             if this_score > best_score:
+                best_score = this_score
                 best_word = word
                 best_offset = offset
     return (best_word, best_offset)
@@ -36,34 +37,34 @@ def score(pair_bigrams, all_bigrams):
     '''
     Returns an aggregate score for a set of bigrams,
     against a defaultdict of all bigrams.
+    Bigrams with spaces are ignored.
     
     >>> all_bigrams = defaultdict(int, {'ab': 1, 'cd': 4})
-    >>> score(['ab'], all_bigrams)
-    1.0
+    >>> score(['ab', 'a ', ' a'], all_bigrams)
+    0.0
     >>> score(['ab', 'cd'], all_bigrams)
     2.0
     >>> score(['ab', 'cd', 'xy'], all_bigrams)
-    0.0
+    -inf
     '''
-    counts = [all_bigrams[bg] for bg in pair_bigrams]
+    counts = [all_bigrams[bg] for bg in pair_bigrams if ' ' not in bg]
     return combine_counts(counts)
 
 def combine_counts(counts):
     '''
     Given a set of counts, returns an aggregate score.
-    (For now, it's the geometric mean, with special case for zero.)
     
     >>> combine_counts([2,0])
-    0.0
+    -inf
     >>> combine_counts([2,2])
     2.0
     >>> combine_counts([1,2,4])
-    2.0
+    3.0
     '''
     if 0 in counts:
-        return 0.0
+        return -float('inf')
     logs = [log2(count) for count in counts]
-    return 2 ** (sum(logs) / len(logs))    
+    return sum(logs)    
             
 def alignment_bigrams(a_str, b_str):
     '''
