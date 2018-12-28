@@ -2,21 +2,56 @@ from collections import defaultdict
 from math import log2
 
 
-def best_word(sequence, words, on_top=True):
+def pretty(sequence, words, swap=True):
+    '''
+    Returns a string representing an alignment of sequence
+    against one word.
+
+    # >>> words = {'boy', 'aka', 'abba', 'book', 'year', 'tab'}
+    # >>> print(pretty('oboe', words, swap=True))
+    # abba
+    #   oboe
+    # >>> print(pretty('oboe', words, swap=False))
+    #  oboe
+    # book
+    '''
+    all_bigrams = bigrams(words)
+    (word, offset) = best_word(sequence, words, all_bigrams, swap)
+    padding = abs(offset) * ' '
+    (padded_sequence, padded_word) = (
+        (padding + sequence, word)
+        if offset > 0 else
+        (sequence, padding + word)
+    )
+    return '\n'.join(
+        [padded_word, padded_sequence]
+        if swap else
+        [padded_sequence, padded_word]
+    )
+
+
+def best_word(sequence, words, all_bigrams, swap=True):
     '''
     Given a sequence of characters, and a list of words,
-    and a flag which indicates whether the word we seek is above
-    or below the sequence,
+    and a dict of bigram frequencies,
+    and a flag which indicates whether the word we seek is before
+    or after the sequence,
     returns the word and an offset which produces the best bigrams.
 
     >>> words = {'boy', 'aka', 'abba', 'book', 'year', 'tab'}
-    >>> best_word('oboe', words)
+    >>> all_bigrams = bigrams(words)
+    >>> best_word('oboe', words, all_bigrams)
     ('abba', 2)
 
-    >>> best_word('oboe', words, on_top=False)
+    >>> best_word('oboe', words, all_bigrams, swap=False)
     ('book', 1)
+
+    >>> alpha = 'abcd'
+    >>> best_word(alpha, {alpha}, bigrams({alpha}), swap=True)
+    ('abcd', -1)
+    >>> best_word(alpha, {alpha}, bigrams({alpha}), swap=False)
+    ('abcd', 1)
     '''
-    all_bigrams = bigrams(words)
     best_score = 0
     best_word = None
     best_offset = None
@@ -24,7 +59,7 @@ def best_word(sequence, words, on_top=True):
         for offset, overlap in offset_overlaps(sequence, word):
             pair_bigrams = (
                 alignment_bigrams(overlap, sequence)
-                if on_top else
+                if swap else
                 alignment_bigrams(sequence, overlap)
             )
             this_score = score(pair_bigrams, all_bigrams)
@@ -43,11 +78,11 @@ def score(pair_bigrams, all_bigrams):
 
     >>> all_bigrams = defaultdict(int, {'ab': 1, 'cd': 4})
     >>> score(['ab', 'a ', ' a'], all_bigrams)
-    0.0
+    1
     >>> score(['ab', 'cd'], all_bigrams)
-    2.0
+    4
     >>> score(['ab', 'cd', 'xy'], all_bigrams)
-    -inf
+    0
     '''
     counts = [all_bigrams[bg] for bg in pair_bigrams if ' ' not in bg]
     return combine_counts(counts)
@@ -58,16 +93,16 @@ def combine_counts(counts):
     Given a set of counts, returns an aggregate score.
 
     >>> combine_counts([2,0])
-    -inf
+    0
     >>> combine_counts([2,2])
-    2.0
+    4
     >>> combine_counts([1,2,4])
-    3.0
+    8
     '''
-    if 0 in counts:
-        return -float('inf')
-    logs = [log2(count) for count in counts]
-    return sum(logs)
+    product = 1
+    for count in counts:
+        product *= count
+    return product
 
 
 def alignment_bigrams(a_str, b_str):
