@@ -1,26 +1,31 @@
 from collections import defaultdict
 
 
-# def pretty_best_pairs(words):
-#     '''
-#     Returns a string representing the best alignments of a set of words.
-#
-#     # >>> words = {'aka', 'abba', 'book'}
-#     # >>> print(pretty_best_pairs(words))
-#     # book
-#     #   book
-#     # -----
-#     # aka
-#     #   book
-#     # -----
-#     # abba
-#     #    book
-#     '''
-#     pairs = best_pairs(words)
-#     return '\n-----\n'.join([
-#         pretty_offset(word1, word2, offset, False)
-#         for (word1, word2, offset) in pairs
-#     ])
+def pretty_best_pairs(words):
+    '''
+    Returns a string representing the best alignments of a set of words.
+
+    >>> words = {'abc', 'bcd'}
+    >>> print(pretty_best_pairs(words))
+      bcd
+    abc
+    -----
+     abc
+    abc
+    =====
+     bcd
+    bcd
+    -----
+    abc
+    bcd
+    '''
+    return '\n=====\n'.join([
+        '\n-----\n'.join([
+            pretty_offset(word1, word2, offset, True)
+            for (word2, offset) in offsets
+        ])
+        for (word1, offsets) in best_pairs(words)
+    ])
 
 
 def pretty_offset(sequence, word, offset, swap):
