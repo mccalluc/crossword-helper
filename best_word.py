@@ -21,39 +21,39 @@ from collections import defaultdict
 #         pretty_offset(word1, word2, offset, False)
 #         for (word1, word2, offset) in pairs
 #     ])
-#
-#
-#
-#
-# def pretty_offset(sequence, word, offset, swap):
-#     '''
-#     >>> words = {'boy', 'aka', 'abba', 'book', 'year', 'tab'}
-#     >>> all_bigrams = bigrams(words)
-#     >>> sequence = 'oboe'
-#
-#     >>> swap = True
-#     >>> (word, offset) = best_word(sequence, words, all_bigrams, swap)
-#     >>> print(pretty_offset(sequence, word, offset, swap))
-#     abba
-#       oboe
-#
-#     >>> swap = False
-#     >>> (word, offset) = best_word(sequence, words, all_bigrams, swap)
-#     >>> print(pretty_offset(sequence, word, offset, swap))
-#      oboe
-#     book
-#     '''
-#     padding = abs(offset) * ' '
-#     (padded_sequence, padded_word) = (
-#         (padding + sequence, word)
-#         if offset > 0 else
-#         (sequence, padding + word)
-#     )
-#     return '\n'.join(
-#         [padded_word, padded_sequence]
-#         if swap else
-#         [padded_sequence, padded_word]
-#     )
+
+
+def pretty_offset(sequence, word, offset, swap):
+    '''
+    >>> words = ['boy', 'aka', 'abba', 'book', 'year', 'tab']
+    >>> all_bigrams = bigrams(words)
+    >>> sequence = 'oboe'
+
+    >>> swap = True
+    >>> offsets = best_words(sequence, words, all_bigrams, swap)
+    >>> for (word, offset) in offsets:
+    ...     print(pretty_offset(sequence, word, offset, swap))
+    abba
+      oboe
+
+    >>> swap = False
+    >>> offsets = best_words(sequence, words, all_bigrams, swap)
+    >>> for (word, offset) in offsets:
+    ...     print(pretty_offset(sequence, word, offset, swap))
+     oboe
+    book
+    '''
+    padding = abs(offset) * ' '
+    (padded_sequence, padded_word) = (
+        (padding + sequence, word)
+        if offset > 0 else
+        (sequence, padding + word)
+    )
+    return '\n'.join(
+        [padded_word, padded_sequence]
+        if swap else
+        [padded_sequence, padded_word]
+    )
 
 
 def best_pairs(words):
@@ -65,10 +65,10 @@ def best_pairs(words):
     [('abcde', [('abcde', -1), ('cdefg', -3)]), ('cdefg', [('cdefg', -1)]), ('efghi', [('cdefg', 1)])]
     '''
     all_bigrams = bigrams(words)
-    return [(word, best_word(word, words, all_bigrams)) for word in sorted(words)]
+    return [(word, best_words(word, words, all_bigrams)) for word in sorted(words)]
 
 
-def best_word(sequence, words, all_bigrams, swap=True):
+def best_words(sequence, words, all_bigrams, swap=True):
     '''
     Given a sequence of characters, and a list of words,
     and a dict of bigram frequencies,
@@ -78,22 +78,22 @@ def best_word(sequence, words, all_bigrams, swap=True):
 
     >>> words = {'boy', 'aka', 'abba', 'book', 'year', 'tab'}
     >>> all_bigrams = bigrams(words)
-    >>> best_word('oboe', words, all_bigrams)
+    >>> best_words('oboe', words, all_bigrams)
     [('abba', 2)]
 
-    >>> best_word('oboe', words, all_bigrams, swap=False)
+    >>> best_words('oboe', words, all_bigrams, swap=False)
     [('book', 1)]
 
     >>> alpha = 'abcd'
-    >>> best_word(alpha, {alpha}, bigrams({alpha}), swap=True)
+    >>> best_words(alpha, {alpha}, bigrams({alpha}), swap=True)
     [('abcd', -1)]
-    >>> best_word(alpha, {alpha}, bigrams({alpha}), swap=False)
+    >>> best_words(alpha, {alpha}, bigrams({alpha}), swap=False)
     [('abcd', 1)]
 
     If order matters, supply a list.
 
     >>> words = ['abcde', 'cdefg', 'efghi']
-    >>> best_word('abcde', words, bigrams(words))
+    >>> best_words('abcde', words, bigrams(words))
     [('abcde', -1), ('cdefg', -3)]
     '''
     best_score = 0
