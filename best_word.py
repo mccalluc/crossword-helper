@@ -1,33 +1,74 @@
 from collections import defaultdict
-from math import log2
 
 
-def pretty(sequence, words, swap=True):
+# def pretty_best_pairs(words):
+#     '''
+#     Returns a string representing the best alignments of a set of words.
+#
+#     # >>> words = {'aka', 'abba', 'book'}
+#     # >>> print(pretty_best_pairs(words))
+#     # book
+#     #   book
+#     # -----
+#     # aka
+#     #   book
+#     # -----
+#     # abba
+#     #    book
+#     '''
+#     pairs = best_pairs(words)
+#     return '\n-----\n'.join([
+#         pretty_offset(word1, word2, offset, False)
+#         for (word1, word2, offset) in pairs
+#     ])
+#
+#
+#
+#
+# def pretty_offset(sequence, word, offset, swap):
+#     '''
+#     >>> words = {'boy', 'aka', 'abba', 'book', 'year', 'tab'}
+#     >>> all_bigrams = bigrams(words)
+#     >>> sequence = 'oboe'
+#
+#     >>> swap = True
+#     >>> (word, offset) = best_word(sequence, words, all_bigrams, swap)
+#     >>> print(pretty_offset(sequence, word, offset, swap))
+#     abba
+#       oboe
+#
+#     >>> swap = False
+#     >>> (word, offset) = best_word(sequence, words, all_bigrams, swap)
+#     >>> print(pretty_offset(sequence, word, offset, swap))
+#      oboe
+#     book
+#     '''
+#     padding = abs(offset) * ' '
+#     (padded_sequence, padded_word) = (
+#         (padding + sequence, word)
+#         if offset > 0 else
+#         (sequence, padding + word)
+#     )
+#     return '\n'.join(
+#         [padded_word, padded_sequence]
+#         if swap else
+#         [padded_sequence, padded_word]
+#     )
+
+
+def best_pairs(words):
     '''
-    Returns a string representing an alignment of sequence
-    against one word.
+    Given a set of words, return the best pairs.
 
-    # >>> words = {'boy', 'aka', 'abba', 'book', 'year', 'tab'}
-    # >>> print(pretty('oboe', words, swap=True))
-    # abba
-    #   oboe
-    # >>> print(pretty('oboe', words, swap=False))
-    #  oboe
-    # book
+    >>> words = {'abc', 'cde'}
+    >>> pairs = best_pairs(words)
+    >>> pairs[0]
+    ('abc', {'score': 1, 'word_offsets': [('abc', -1)]})
+    >>> pairs[1]
+    ('cde', {'score': 1, 'word_offsets': [('abc', 1), ('cde', -1)]})
     '''
     all_bigrams = bigrams(words)
-    (word, offset) = best_word(sequence, words, all_bigrams, swap)
-    padding = abs(offset) * ' '
-    (padded_sequence, padded_word) = (
-        (padding + sequence, word)
-        if offset > 0 else
-        (sequence, padding + word)
-    )
-    return '\n'.join(
-        [padded_word, padded_sequence]
-        if swap else
-        [padded_sequence, padded_word]
-    )
+    return [(word, best_word(word, words, all_bigrams)) for word in sorted(words)]
 
 
 def best_word(sequence, words, all_bigrams, swap=True):
@@ -41,20 +82,19 @@ def best_word(sequence, words, all_bigrams, swap=True):
     >>> words = {'boy', 'aka', 'abba', 'book', 'year', 'tab'}
     >>> all_bigrams = bigrams(words)
     >>> best_word('oboe', words, all_bigrams)
-    ('abba', 2)
+    {'score': 4, 'word_offsets': [('abba', 2)]}
 
     >>> best_word('oboe', words, all_bigrams, swap=False)
-    ('book', 1)
+    {'score': 2, 'word_offsets': [('book', 1)]}
 
     >>> alpha = 'abcd'
     >>> best_word(alpha, {alpha}, bigrams({alpha}), swap=True)
-    ('abcd', -1)
+    {'score': 1, 'word_offsets': [('abcd', -1)]}
     >>> best_word(alpha, {alpha}, bigrams({alpha}), swap=False)
-    ('abcd', 1)
+    {'score': 1, 'word_offsets': [('abcd', 1)]}
     '''
     best_score = 0
-    best_word = None
-    best_offset = None
+    best_word_offsets = []
     for word in words:
         for offset, overlap in offset_overlaps(sequence, word):
             pair_bigrams = (
@@ -64,10 +104,11 @@ def best_word(sequence, words, all_bigrams, swap=True):
             )
             this_score = score(pair_bigrams, all_bigrams)
             if this_score > best_score:
+                best_word_offsets = []
+            if this_score >= best_score:
                 best_score = this_score
-                best_word = word
-                best_offset = offset
-    return (best_word, best_offset)
+                best_word_offsets.append((word, offset))
+    return {'score': best_score, 'word_offsets': best_word_offsets}
 
 
 def score(pair_bigrams, all_bigrams):
