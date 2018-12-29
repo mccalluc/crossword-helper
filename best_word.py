@@ -60,12 +60,9 @@ def best_pairs(words):
     '''
     Given a set of words, return the best pairs.
 
-    >>> words = {'abc', 'cde'}
-    >>> pairs = best_pairs(words)
-    >>> pairs[0]
-    ('abc', {'score': 1, 'word_offsets': [('abc', -1)]})
-    >>> pairs[1]
-    ('cde', {'score': 1, 'word_offsets': [('abc', 1), ('cde', -1)]})
+    >>> words = ['abcde', 'cdefg', 'efghi']
+    >>> best_pairs(words)
+    [('abcde', [('abcde', -1), ('cdefg', -3)]), ('cdefg', [('cdefg', -1)]), ('efghi', [('cdefg', 1)])]
     '''
     all_bigrams = bigrams(words)
     return [(word, best_word(word, words, all_bigrams)) for word in sorted(words)]
@@ -82,16 +79,22 @@ def best_word(sequence, words, all_bigrams, swap=True):
     >>> words = {'boy', 'aka', 'abba', 'book', 'year', 'tab'}
     >>> all_bigrams = bigrams(words)
     >>> best_word('oboe', words, all_bigrams)
-    {'score': 4, 'word_offsets': [('abba', 2)]}
+    [('abba', 2)]
 
     >>> best_word('oboe', words, all_bigrams, swap=False)
-    {'score': 2, 'word_offsets': [('book', 1)]}
+    [('book', 1)]
 
     >>> alpha = 'abcd'
     >>> best_word(alpha, {alpha}, bigrams({alpha}), swap=True)
-    {'score': 1, 'word_offsets': [('abcd', -1)]}
+    [('abcd', -1)]
     >>> best_word(alpha, {alpha}, bigrams({alpha}), swap=False)
-    {'score': 1, 'word_offsets': [('abcd', 1)]}
+    [('abcd', 1)]
+
+    If order matters, supply a list.
+
+    >>> words = ['abcde', 'cdefg', 'efghi']
+    >>> best_word('abcde', words, bigrams(words))
+    [('abcde', -1), ('cdefg', -3)]
     '''
     best_score = 0
     best_word_offsets = []
@@ -108,7 +111,7 @@ def best_word(sequence, words, all_bigrams, swap=True):
             if this_score >= best_score:
                 best_score = this_score
                 best_word_offsets.append((word, offset))
-    return {'score': best_score, 'word_offsets': best_word_offsets}
+    return best_word_offsets
 
 
 def score(pair_bigrams, all_bigrams):
