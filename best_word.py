@@ -1,4 +1,7 @@
+#!/usr/bin/env python
+
 from collections import defaultdict
+from sys import argv
 
 
 def pretty_best_pairs(words):
@@ -219,3 +222,10 @@ def bigrams(words):
         for i in range(len(word) - 1):
             counts[word[i:i+2]] += 1
     return counts
+
+
+if __name__ == '__main__':
+    filename = argv[1]
+    with open(filename) as f:
+        lines = [line.strip() for line in f.readlines()]
+        print(pretty_best_pairs(lines))
