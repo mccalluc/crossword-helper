@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
 from collections import defaultdict
-from sys import argv
+from sys import argv, stdin
 
 
 def pretty_best_pairs(words):
@@ -233,7 +233,8 @@ def bigrams(words):
 
 
 if __name__ == '__main__':
-    filename = argv[1]
-    with open(filename) as f:
+    if len(argv) > 2:
+        raise Error('At most one argument allowed')
+    with open(argv[1]) if len(argv) == 2 else stdin as f:
         lines = [line.strip() for line in f.readlines()]
         print(pretty_best_pairs(lines))
