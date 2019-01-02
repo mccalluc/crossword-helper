@@ -10,16 +10,10 @@ def pretty_best_pairs(words):
 
     >>> words = ['abc', 'bcd']
     >>> print(pretty_best_pairs(words))
-     abc
-    abc
-    -----
       bcd
     abc
     =====
     abc
-    bcd
-    -----
-     bcd
     bcd
     '''
     return '\n=====\n'.join([
@@ -73,13 +67,16 @@ def best_pairs(words):
     >>> len(best)
     3
     >>> best[0]
-    ('abcde', [('abcde', -1), ('cdefg', -3)])
+    ('abcde', [('cdefg', -3)])
     >>> best[1]
-    ('cdefg', [('cdefg', -1)])
+    ('cdefg', [('abcde', 1)])
     '''
     all_bigrams = bigrams(words)
     return [
-        (word, best_words(word, words, all_bigrams))
+        (
+            word,
+            best_words(word, [w for w in words if w != word], all_bigrams)
+        )
         for word in sorted(words)
     ]
 
@@ -234,7 +231,7 @@ def bigrams(words):
 
 if __name__ == '__main__':
     if len(argv) > 2:
-        raise Error('At most one argument allowed')
+        raise Exception('At most one argument allowed')
     with open(argv[1]) if len(argv) == 2 else stdin as f:
         lines = [line.strip() for line in f.readlines()]
         print(pretty_best_pairs(lines))
