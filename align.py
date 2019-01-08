@@ -193,21 +193,19 @@ def overlaps(sequence, word):
     '''
     Returns all the possible alignments of word against sequence.
 
-    >>> overlaps('hat', 'cat')
+    >>> list(overlaps('hat', 'cat'))
     ['  c', ' ca', 'cat', 'at ', 't  ']
 
-    >>> overlaps('x', 'abcdefg')
+    >>> list(overlaps('x', 'abcdefg'))
     ['a', 'b', 'c', 'd', 'e', 'f', 'g']
 
-    >>> overlaps('abc', 'x')
+    >>> list(overlaps('abc', 'x'))
     ['  x', ' x ', 'x  ']
     '''
     word_padding = ' ' * (len(sequence) - 1)
     padded_word = word_padding + word + word_padding
-    return [
-        padded_word[offset:offset + len(sequence)]
-        for offset in range(len(word) + len(sequence) - 1)
-    ]
+    for offset in range(len(word) + len(sequence) - 1):
+        yield padded_word[offset:offset + len(sequence)]
 
 
 def bigrams(words):
