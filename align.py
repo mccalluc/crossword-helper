@@ -56,29 +56,31 @@ from collections import defaultdict, namedtuple
 #         if swap else
 #         [padded_sequence, padded_word]
 #     )
-#
-#
-# def best_pairs(words):
-#     '''
-#     Given a set of words, return the best pairs.
-#
-#     >>> words = ['abcde', 'cdefg', 'efghi']
-#     >>> best = best_pairs(words)
-#     >>> len(best)
-#     3
-#     >>> best[0]
-#     ('abcde', [('cdefg', -3)])
-#     >>> best[1]
-#     ('cdefg', [('abcde', 1)])
-#     '''
-#     all_bigrams = bigrams(words)
-#     return [
-#         (
-#             word,
-#             best_words(word, [w for w in words if w != word], all_bigrams)
-#         )
-#         for word in sorted(words)
-#     ]
+
+
+def best_pairs(words):
+    '''
+    Given a set of words, return the best pairs.
+
+    >>> words = ['abcde', 'cdefg', 'efghi']
+    >>> best = list(best_pairs(words))
+    >>> len(best)
+    3
+    >>> best[0].word
+    'abcde'
+    >>> list(best[0].alignments)
+    [ScoredAlignment(alignment=('cdefg', -3), score=4)]
+    '''
+    all_bigrams = bigrams(words)
+    for word in sorted(words):
+        yield ScoredPairs(
+            word,
+            best_words(word, [w for w in words if w != word], all_bigrams)
+        )
+
+
+ScoredPairs = namedtuple('ScoredPairs', ['word', 'alignments'])
+
 
 def best_words(sequence, words, all_bigrams, swap=True):
     '''
