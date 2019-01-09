@@ -13,18 +13,18 @@ def pretty_best_pairs(words):
     2:
       bcd
     abc
-    =====
     2:
     abc
     bcd
     '''
-    return '\n=====\n'.join([
-        '\n'.join([
-            str(score) + ':\n' +
-            pretty_offset(scored_pair.word, pair[0], pair[1], True)
-            for (pair, score) in scored_pair.alignments
-        ])
-        for scored_pair in best_pairs(words)
+    alignments = []
+    for scored_pairs in best_pairs(words):
+        for (pair, score) in scored_pairs.alignments:
+            alignments.append((score, scored_pairs.word, pair[0], pair[1]))
+    alignments.sort(key=lambda t: -t[0])
+    return '\n'.join([
+        '{}:\n'.format(t[0]) +
+        pretty_offset(t[1], t[2], t[3], True) for t in alignments
     ])
 
 
