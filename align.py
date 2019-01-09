@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
-from collections import defaultdict
-from sys import argv
+from collections import defaultdict, namedtuple
+from sys import argv, stdin
 
 
 def pretty_best_pairs(words):
@@ -10,24 +10,21 @@ def pretty_best_pairs(words):
 
     >>> words = ['abc', 'bcd']
     >>> print(pretty_best_pairs(words))
-     abc
-    abc
-    -----
+    2:
       bcd
     abc
-    =====
+    2:
     abc
     bcd
-    -----
-     bcd
-    bcd
     '''
-    return '\n=====\n'.join([
-        '\n-----\n'.join([
-            pretty_offset(word1, word2, offset, True)
-            for (word2, offset) in offsets
-        ])
-        for (word1, offsets) in best_pairs(words)
+    alignments = []
+    for scored_pairs in best_pairs(words):
+        for (pair, score) in scored_pairs.alignments:
+            alignments.append((score, scored_pairs.word, pair[0], pair[1]))
+    alignments.sort(key=lambda t: -t[0])
+    return '\n'.join([
+        '{}:\n'.format(t[0]) +
+        pretty_offset(t[1], t[2], t[3], True) for t in alignments
     ])
 
 
@@ -38,17 +35,50 @@ def pretty_offset(sequence, word, offset, swap):
     >>> sequence = 'oboe'
 
     >>> swap = True
-    >>> offsets = best_words(sequence, words, all_bigrams, swap)
-    >>> for (word, offset) in offsets:
+    >>> alignment_scores = best_words(sequence, words, all_bigrams, swap)
+    >>> for alignment_score in alignment_scores:
+    ...     (word, offset) = alignment_score.alignment
+    ...     print(alignment_score.score, ':')
     ...     print(pretty_offset(sequence, word, offset, swap))
+    1 :
+     boy
+    oboe
+    4 :
     abba
+      oboe
+    1 :
+       year
+    oboe
+    2 :
+    tab
       oboe
 
     >>> swap = False
-    >>> offsets = best_words(sequence, words, all_bigrams, swap)
-    >>> for (word, offset) in offsets:
+    >>> alignment_scores = best_words(sequence, words, all_bigrams, swap)
+    >>> for alignment_score in alignment_scores:
+    ...     (word, offset) = alignment_score.alignment
+    ...     print(alignment_score.score, ':')
     ...     print(pretty_offset(sequence, word, offset, swap))
+    1 :
+      oboe
+    boy
+    1 :
+    oboe
+       aka
+    1 :
+    oboe
+     aka
+    1 :
      oboe
+    aka
+    1 :
+    oboe
+       abba
+    2 :
+     oboe
+    book
+    1 :
+       oboe
     book
     '''
     padding = abs(offset) * ' '
@@ -58,9 +88,9 @@ def pretty_offset(sequence, word, offset, swap):
         (sequence, padding + word)
     )
     return '\n'.join(
-        [padded_word, padded_sequence]
+        [str(padded_word), str(padded_sequence)]
         if swap else
-        [padded_sequence, padded_word]
+        [str(padded_sequence), str(padded_word)]
     )
 
 
@@ -69,19 +99,23 @@ def best_pairs(words):
     Given a set of words, return the best pairs.
 
     >>> words = ['abcde', 'cdefg', 'efghi']
-    >>> best = best_pairs(words)
+    >>> best = list(best_pairs(words))
     >>> len(best)
     3
-    >>> best[0]
-    ('abcde', [('abcde', -1), ('cdefg', -3)])
-    >>> best[1]
-    ('cdefg', [('cdefg', -1)])
+    >>> best[0].word
+    'abcde'
+    >>> list(best[0].alignments)
+    [ScoredAlignment(alignment=('cdefg', -3), score=4)]
     '''
     all_bigrams = bigrams(words)
-    return [
-        (word, best_words(word, words, all_bigrams))
-        for word in sorted(words)
-    ]
+    for word in sorted(words):
+        yield ScoredPairs(
+            word,
+            best_words(word, [w for w in words if w != word], all_bigrams)
+        )
+
+
+ScoredPairs = namedtuple('ScoredPairs', ['word', 'alignments'])
 
 
 def best_words(sequence, words, all_bigrams, swap=True):
@@ -90,30 +124,29 @@ def best_words(sequence, words, all_bigrams, swap=True):
     and a dict of bigram frequencies,
     and a flag which indicates whether the word we seek is before
     or after the sequence,
-    returns the word and an offset which produces the best bigrams.
+    returns word-offset pairs, along with their scores.
 
     >>> words = ['boy', 'aka', 'abba', 'book', 'year', 'tab']
     >>> all_bigrams = bigrams(words)
-    >>> best_words('oboe', words, all_bigrams)
-    [('abba', 2)]
-
-    >>> best_words('oboe', words, all_bigrams, swap=False)
-    [('book', 1)]
+    >>> [(a.alignment, a.score) for a in
+    ...  best_words('oboe', words, all_bigrams)]
+    [(('boy', -1), 1), (('abba', 2), 4), (('year', -3), 1), (('tab', 2), 2)]
 
     >>> alpha = 'abcd'
-    >>> best_words(alpha, {alpha}, bigrams({alpha}), swap=True)
-    [('abcd', -1)]
-    >>> best_words(alpha, {alpha}, bigrams({alpha}), swap=False)
-    [('abcd', 1)]
+    >>> [(a.alignment, a.score) for a in
+    ...  best_words(alpha, {alpha}, bigrams({alpha}), swap=True)]
+    [(('abcd', -1), 1)]
+    >>> [(a.alignment, a.score) for a in
+    ...  best_words(alpha, {alpha}, bigrams({alpha}), swap=False)]
+    [(('abcd', 1), 1)]
 
     If order matters, supply a list.
 
     >>> words = ['abcde', 'cdefg', 'efghi']
-    >>> best_words('abcde', words, bigrams(words))
-    [('abcde', -1), ('cdefg', -3)]
+    >>> [(a.alignment, a.score) for a in
+    ...  best_words('abcde', words, bigrams(words))]
+    [(('abcde', -1), 4), (('cdefg', -3), 4)]
     '''
-    best_score = 0
-    best_word_offsets = []
     for word in words:
         for offset, overlap in offset_overlaps(sequence, word):
             pair_bigrams = (
@@ -122,12 +155,11 @@ def best_words(sequence, words, all_bigrams, swap=True):
                 alignment_bigrams(sequence, overlap)
             )
             this_score = score(pair_bigrams, all_bigrams)
-            if this_score > best_score:
-                best_word_offsets = []
-            if this_score >= best_score:
-                best_score = this_score
-                best_word_offsets.append((word, offset))
-    return best_word_offsets
+            if this_score > 0:
+                yield ScoredAlignment((word, offset), this_score)
+
+
+ScoredAlignment = namedtuple('ScoredAlignment', ['alignment', 'score'])
 
 
 def score(pair_bigrams, all_bigrams):
@@ -180,37 +212,33 @@ def offset_overlaps(sequence, word):
     '''
     Return offsets and overlaps of word against sequence.
 
-    >>> offset_overlaps('abc','xy')
+    >>> list(offset_overlaps('abc','xy'))
     [(-2, '  x'), (-1, ' xy'), (0, 'xy '), (1, 'y  ')]
 
-    >>> offset_overlaps('a','xyz')
+    >>> list(offset_overlaps('a','xyz'))
     [(0, 'x'), (1, 'y'), (2, 'z')]
     '''
-    return [
-        (i - len(sequence) + 1, overlap)
-        for i, overlap in enumerate(overlaps(sequence, word))
-    ]
+    for i, overlap in enumerate(overlaps(sequence, word)):
+        yield (i - len(sequence) + 1, overlap)
 
 
 def overlaps(sequence, word):
     '''
     Returns all the possible alignments of word against sequence.
 
-    >>> overlaps('hat', 'cat')
+    >>> list(overlaps('hat', 'cat'))
     ['  c', ' ca', 'cat', 'at ', 't  ']
 
-    >>> overlaps('x', 'abcdefg')
+    >>> list(overlaps('x', 'abcdefg'))
     ['a', 'b', 'c', 'd', 'e', 'f', 'g']
 
-    >>> overlaps('abc', 'x')
+    >>> list(overlaps('abc', 'x'))
     ['  x', ' x ', 'x  ']
     '''
     word_padding = ' ' * (len(sequence) - 1)
     padded_word = word_padding + word + word_padding
-    return [
-        padded_word[offset:offset + len(sequence)]
-        for offset in range(len(word) + len(sequence) - 1)
-    ]
+    for offset in range(len(word) + len(sequence) - 1):
+        yield padded_word[offset:offset + len(sequence)]
 
 
 def bigrams(words):
@@ -233,7 +261,8 @@ def bigrams(words):
 
 
 if __name__ == '__main__':
-    filename = argv[1]
-    with open(filename) as f:
+    if len(argv) > 2:
+        raise Exception('At most one argument allowed')
+    with open(argv[1]) if len(argv) == 2 else stdin as f:
         lines = [line.strip() for line in f.readlines()]
         print(pretty_best_pairs(lines))
