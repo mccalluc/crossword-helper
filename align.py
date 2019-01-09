@@ -23,39 +23,72 @@ from collections import defaultdict, namedtuple
 #         ])
 #         for (word1, offsets) in best_pairs(words)
 #     ])
-#
-#
-# def pretty_offset(sequence, word, offset, swap):
-#     '''
-#     >>> words = ['boy', 'aka', 'abba', 'book', 'year', 'tab']
-#     >>> all_bigrams = bigrams(words)
-#     >>> sequence = 'oboe'
-#
-#     >>> swap = True
-#     >>> offsets = best_words(sequence, words, all_bigrams, swap)
-#     >>> for (word, offset) in offsets:
-#     ...     print(pretty_offset(sequence, word, offset, swap))
-#     abba
-#       oboe
-#
-#     >>> swap = False
-#     >>> offsets = best_words(sequence, words, all_bigrams, swap)
-#     >>> for (word, offset) in offsets:
-#     ...     print(pretty_offset(sequence, word, offset, swap))
-#      oboe
-#     book
-#     '''
-#     padding = abs(offset) * ' '
-#     (padded_sequence, padded_word) = (
-#         (padding + sequence, word)
-#         if offset > 0 else
-#         (sequence, padding + word)
-#     )
-#     return '\n'.join(
-#         [padded_word, padded_sequence]
-#         if swap else
-#         [padded_sequence, padded_word]
-#     )
+
+
+def pretty_offset(sequence, word, offset, swap):
+    '''
+    >>> words = ['boy', 'aka', 'abba', 'book', 'year', 'tab']
+    >>> all_bigrams = bigrams(words)
+    >>> sequence = 'oboe'
+
+    >>> swap = True
+    >>> alignment_scores = best_words(sequence, words, all_bigrams, swap)
+    >>> for alignment_score in alignment_scores:
+    ...     (word, offset) = alignment_score.alignment
+    ...     print(alignment_score.score, ':')
+    ...     print(pretty_offset(sequence, word, offset, swap))
+    1 :
+     boy
+    oboe
+    4 :
+    abba
+      oboe
+    1 :
+       year
+    oboe
+    2 :
+    tab
+      oboe
+
+    >>> swap = False
+    >>> alignment_scores = best_words(sequence, words, all_bigrams, swap)
+    >>> for alignment_score in alignment_scores:
+    ...     (word, offset) = alignment_score.alignment
+    ...     print(alignment_score.score, ':')
+    ...     print(pretty_offset(sequence, word, offset, swap))
+    1 :
+      oboe
+    boy
+    1 :
+    oboe
+       aka
+    1 :
+    oboe
+     aka
+    1 :
+     oboe
+    aka
+    1 :
+    oboe
+       abba
+    2 :
+     oboe
+    book
+    1 :
+       oboe
+    book
+    '''
+    padding = abs(offset) * ' '
+    (padded_sequence, padded_word) = (
+        (padding + sequence, word)
+        if offset > 0 else
+        (sequence, padding + word)
+    )
+    return '\n'.join(
+        [str(padded_word), str(padded_sequence)]
+        if swap else
+        [str(padded_sequence), str(padded_word)]
+    )
 
 
 def best_pairs(words):
