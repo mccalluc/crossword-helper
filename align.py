@@ -1,28 +1,31 @@
 #!/usr/bin/env python
 
 from collections import defaultdict, namedtuple
-# from sys import argv, stdin
+from sys import argv, stdin
 
 
-# def pretty_best_pairs(words):
-#     '''
-#     Returns a string representing the best alignments of a set of words.
-#
-#     >>> words = ['abc', 'bcd']
-#     >>> print(pretty_best_pairs(words))
-#       bcd
-#     abc
-#     =====
-#     abc
-#     bcd
-#     '''
-#     return '\n=====\n'.join([
-#         '\n-----\n'.join([
-#             pretty_offset(word1, word2, offset, True)
-#             for (word2, offset) in offsets
-#         ])
-#         for (word1, offsets) in best_pairs(words)
-#     ])
+def pretty_best_pairs(words):
+    '''
+    Returns a string representing the best alignments of a set of words.
+
+    >>> words = ['abc', 'bcd']
+    >>> print(pretty_best_pairs(words))
+    2:
+      bcd
+    abc
+    =====
+    2:
+    abc
+    bcd
+    '''
+    return '\n=====\n'.join([
+        '\n'.join([
+            str(score) + ':\n' +
+            pretty_offset(scored_pair.word, pair[0], pair[1], True)
+            for (pair, score) in scored_pair.alignments
+        ])
+        for scored_pair in best_pairs(words)
+    ])
 
 
 def pretty_offset(sequence, word, offset, swap):
@@ -257,9 +260,9 @@ def bigrams(words):
     return counts
 
 
-# if __name__ == '__main__':
-#     if len(argv) > 2:
-#         raise Exception('At most one argument allowed')
-#     with open(argv[1]) if len(argv) == 2 else stdin as f:
-#         lines = [line.strip() for line in f.readlines()]
-#         print(pretty_best_pairs(lines))
+if __name__ == '__main__':
+    if len(argv) > 2:
+        raise Exception('At most one argument allowed')
+    with open(argv[1]) if len(argv) == 2 else stdin as f:
+        lines = [line.strip() for line in f.readlines()]
+        print(pretty_best_pairs(lines))
