@@ -6,14 +6,26 @@ there is at least one word in your input that could satisfy each overlapping pos
 Better alignments are given first. Scores are subject to change.
 
 ```
-$ grep '^...$' /usr/share/dict/words | ./align.py | head
-29400:
-taa
-ann
-29400:
-ara
-nan
-25725:
-aha
-non
+$ echo $'january\nfebruary\nmarch\napril\nmay' | ./align.py
+12:
+     march
+february
+12:
+    march
+january
+2:
+ march
+may
+1:
+       april
+february
+1:
+      april
+january
+1:
+ january
+may
+1:
+  april
+may
 ```
