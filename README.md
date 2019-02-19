@@ -8,27 +8,15 @@ there is at least one word in your input that could satisfy each overlapping pos
 Better alignments are given first.
 
 ```
-$ echo $'january\nfebruary\nmarch\napril\nmay' | ./align.py
+$ ./align.py fixtures/months.txt | head -n8
+ november
+december
+
      march
 february
 
     march
 january
-
- march
-may
-
-       april
-february
-
-      april
-january
-
- january
-may
-
-  april
-may
 ```
 
 ## `transpose.py`
@@ -36,7 +24,7 @@ may
 Transpose blocks separated by blank lines.
 
 ```
-$ echo $'abc\nxyz\n\nax\nby\ncz' | ./transpose.py
+$ python -c 'print("abc\nxyz\n\nax\nby\ncz")' | ./transpose.py
 ax
 by
 cz
