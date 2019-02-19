@@ -1,19 +1,34 @@
 # crossword-helper
 
-Given a list of words, suggests good alignments for crossword puzzles.
+## `align.py`
+
+Given a list of words, suggests good alignments.
 Bigrams are generated from your input, so if an alignment is suggested,
 there is at least one word in your input that could satisfy each overlapping position.
-Better alignments are given first. Scores are subject to change.
+Better alignments are given first.
 
 ```
-$ grep '^...$' /usr/share/dict/words | ./align.py | head
-29400:
-taa
-ann
-29400:
-ara
-nan
-25725:
-aha
-non
+$ ./align.py fixtures/months.txt | head -n8
+ november
+december
+
+     march
+february
+
+    march
+january
+```
+
+## `transpose.py`
+
+Transpose blocks separated by blank lines.
+
+```
+$ python -c 'print("abc\nxyz\n\nax\nby\ncz")' | ./transpose.py
+ax
+by
+cz
+
+abc
+xyz
 ```

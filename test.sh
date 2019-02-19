@@ -12,3 +12,7 @@ end flake8
 start doctest
 python -m doctest *.py
 end doctest
+
+start shelldoctest
+./shelldoctest.py README.md
+end shelldoctest

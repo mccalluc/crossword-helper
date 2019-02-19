@@ -10,10 +10,9 @@ def pretty_best_pairs(words):
 
     >>> words = ['abc', 'bcd']
     >>> print(pretty_best_pairs(words))
-    2:
       bcd
     abc
-    2:
+    <BLANKLINE>
     abc
     bcd
     '''
@@ -22,8 +21,7 @@ def pretty_best_pairs(words):
         for (pair, score) in scored_pairs.alignments:
             alignments.append((score, scored_pairs.word, pair[0], pair[1]))
     alignments.sort(key=lambda t: -t[0])
-    return '\n'.join([
-        '{}:\n'.format(t[0]) +
+    return '\n\n'.join([
         pretty_offset(t[1], t[2], t[3], True) for t in alignments
     ])
 
@@ -57,27 +55,27 @@ def pretty_offset(sequence, word, offset, swap):
     >>> alignment_scores = best_words(sequence, words, all_bigrams, swap)
     >>> for alignment_score in alignment_scores:
     ...     (word, offset) = alignment_score.alignment
-    ...     print(alignment_score.score, ':')
+    ...     print('---')
     ...     print(pretty_offset(sequence, word, offset, swap))
-    1 :
+    ---
       oboe
     boy
-    1 :
+    ---
     oboe
        aka
-    1 :
+    ---
     oboe
      aka
-    1 :
+    ---
      oboe
     aka
-    1 :
+    ---
     oboe
        abba
-    2 :
+    ---
      oboe
     book
-    1 :
+    ---
        oboe
     book
     '''
